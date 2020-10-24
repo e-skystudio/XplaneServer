@@ -1,4 +1,4 @@
-#include "../include/UDPConnection.h"
+#include "../include/UDPConnection.hpp"
 
 UDPConnection::UDPConnection(u_short port, const char* bind_address): _serverSocket(INVALID_SOCKET), _serverAddr({0}),
 	_wsaData({ 0 }), _port(port), _ip(bind_address), _isValid(false)

@@ -151,11 +151,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="include\Dataref.h" />
-    <ClInclude Include="include\UDPConnection.h" />
+    <ClInclude Include="include\Dataref.hpp" />
+    <ClInclude Include="include\TCPServer.hpp" />
+    <ClInclude Include="include\UDPConnection.hpp" />
+    <ClInclude Include="include\Logging.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Dataref.cpp" />
+    <ClCompile Include="src\Logging.cpp" />
+    <ClCompile Include="src\TCPServer.cpp" />
     <ClCompile Include="src\UDPConnection.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
