@@ -33,3 +33,7 @@ private:
 private:
 	void XPLANELogException(const char* previousMessage, const std::exception& e);
 };
+
+
+typedef std::map<std::string, Dataref*> DatarefMap;
+typedef std::map<Dataref*, std::string value> HoldedValueDataref;

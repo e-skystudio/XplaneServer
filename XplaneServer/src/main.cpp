@@ -11,7 +11,7 @@
 TCPServer server;
 
 float MainCallBack(float inElapsedSinceLastCall, float inElapsedTimeSinceLastFlightLoop, int inCounter, void* inRefcon);
-extern std::map<std::string, Dataref*> DatarefMap;
+extern DatarefMap datarefMap;
 
 PLUGIN_API int XPluginStart(char* outName, char* outSig, char* outDesc)
 {
@@ -58,7 +58,7 @@ float MainCallBack(float inElapsedSinceLastCall, float inElapsedTimeSinceLastFli
 	if (server.connectedClients() > 0)
 	{
 		std::string data = "";
-		for (auto& kv : DatarefMap)
+		for (auto& kv : datarefMap)
 		{
 			data += kv.first + " : " + kv.second->GetValue() + "\n";
 		}
