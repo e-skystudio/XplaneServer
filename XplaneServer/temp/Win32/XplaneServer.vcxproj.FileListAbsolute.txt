@@ -1,2 +1,0 @@
-C:\Users\Romain DESSART\source\repos\XplaneServer\XplaneServer\lib\Win32\XplaneServer.pdb
-C:\Users\Romain DESSART\source\repos\XplaneServer\XplaneServer\temp\Win32\XplaneServer.pdb
