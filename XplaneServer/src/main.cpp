@@ -1,15 +1,17 @@
 #include "Networking/TCPServer.hpp"
-#include <map>
+
+#include "./Datas/Callbacks.hpp"
 #include "./Datas/Dataref.hpp"
 
 #include <XPLMProcessing.h>
 #include <XPLMDataAccess.h>
 #include <XPLMUtilities.h>
+#include <map>
 
-std::map<std::string, Dataref*> DatarefMap = std::map<std::string, Dataref*>();
 TCPServer server;
 
 float MainCallBack(float inElapsedSinceLastCall, float inElapsedTimeSinceLastFlightLoop, int inCounter, void* inRefcon);
+extern std::map<std::string, Dataref*> DatarefMap;
 
 PLUGIN_API int XPluginStart(char* outName, char* outSig, char* outDesc)
 {
@@ -21,10 +23,11 @@ PLUGIN_API int XPluginStart(char* outName, char* outSig, char* outDesc)
 	{
 		XPLMSpeakString("UNABLE TO START THE SERVER");
 	}
+	server.bindCallback("REGISTER_DATAREF", RegisterDataref_Callback);
 
-	DatarefMap.emplace("Latitude", new Dataref("sim/flightmodel/position/latitude", xplmType_Float));
-	DatarefMap.emplace("Longitude", new Dataref("sim/flightmodel/position/longitude", xplmType_Float));
-	DatarefMap.emplace("Elevation", new Dataref("sim/flightmodel/position/elevation", xplmType_Float));
+	//DatarefMap.emplace("Latitude", new Dataref("sim/flightmodel/position/latitude", xplmType_Float));
+	//DatarefMap.emplace("Longitude", new Dataref("sim/flightmodel/position/longitude", xplmType_Float));
+	//DatarefMap.emplace("Elevation", new Dataref("sim/flightmodel/position/elevation", xplmType_Float));
 	XPLMRegisterFlightLoopCallback(MainCallBack, 0.5f, NULL);
 
 
@@ -51,11 +54,14 @@ PLUGIN_API void XPluginReceiveMessage(XPLMPluginID inFromWho, int inMessage, voi
 float MainCallBack(float inElapsedSinceLastCall, float inElapsedTimeSinceLastFlightLoop, int inCounter, void* inRefcon)
 {
 	server.listenForClient();
+	server.receiveData();
 	if (server.connectedClients() > 0)
 	{
-		std::string data = "Latitude : " + DatarefMap["Latitude"]->GetValue() + "\n";
-		data += "Longitude : " + DatarefMap["Longitude"]->GetValue() + "\n";
-		data += "Elevation : " + DatarefMap["Elevation"]->GetValue() + "\n\n";
+		std::string data = "";
+		for (auto& kv : DatarefMap)
+		{
+			data += kv.first + " : " + kv.second->GetValue() + "\n";
+		}
 		server.broadcastData(data);
 	}
 	return 0.5f;

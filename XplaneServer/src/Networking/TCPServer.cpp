@@ -152,7 +152,7 @@ int TCPServer::parseReceivedData(Client &cli, std::string data)
 	bool parsingSuccessful = reader->parse(data.c_str(), data.c_str() + data.size(), &root, &errors);
 	if (!parsingSuccessful)
 	{
-		std::cout << "Error parsing the string" << std::endl;
+		_log.AddToFile("Error parsing the string");
 	}
 	const Json::Value operation = root["Ops"];
 

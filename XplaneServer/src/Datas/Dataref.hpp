@@ -1,10 +1,12 @@
 #pragma once
 #include <string>
+#include <map>
 #include <json/json.h>
 #include <XPLMDataAccess.h>
 #include <XPLMUtilities.h>
 
 #include "../Log/Logging.hpp"
+
 
 class Dataref
 {
@@ -31,4 +33,3 @@ private:
 private:
 	void XPLANELogException(const char* previousMessage, const std::exception& e);
 };
-

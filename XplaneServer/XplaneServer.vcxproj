@@ -183,6 +183,7 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\Datas\Callbacks.hpp" />
     <ClInclude Include="src\Networking\Client.hpp" />
     <ClInclude Include="src\Datas\Dataref.hpp" />
     <ClInclude Include="src\Networking\TCPServer.hpp" />
@@ -190,6 +191,7 @@
     <ClInclude Include="src\Log\Logging.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Datas\Callbacks.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Networking\Client.cpp" />
     <ClCompile Include="src\Datas\Dataref.cpp" />
