@@ -9,6 +9,7 @@
 class Logging
 {
 public:
+	Logging();
 	Logging(std::string base_name);
 	void AddToFile(std::string message);
 protected:

@@ -1,5 +1,9 @@
 #include "..\include\Logging.hpp"
 
+Logging::Logging()
+{
+}
+
 Logging::Logging(std::string base_name)
 {
 	_filepath = "./" + base_name + ".log";
@@ -11,7 +15,7 @@ void Logging::AddToFile(std::string message)
 	file.open(_filepath, std::ios::out | std::ios::app);
 	file << get_time_stamp() << message << "\n";
 #ifdef _DEBUG
-	std::cout << get_time_stamp() << message << "\n";
+	std::cout << get_time_stamp() << "\t" << message << "\n";
 #endif // _DEBUG
 	file.close();
 }

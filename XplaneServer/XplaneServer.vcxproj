@@ -151,12 +151,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="include\Client.hpp" />
     <ClInclude Include="include\Dataref.hpp" />
     <ClInclude Include="include\TCPServer.hpp" />
     <ClInclude Include="include\UDPConnection.hpp" />
     <ClInclude Include="include\Logging.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Client.cpp" />
     <ClCompile Include="src\Dataref.cpp" />
     <ClCompile Include="src\Logging.cpp" />
     <ClCompile Include="src\TCPServer.cpp" />
