@@ -33,6 +33,9 @@
     <ClInclude Include="src\Datas\Callbacks.hpp">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
+    <ClInclude Include="src\Log\Logging.hpp">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Datas\Dataref.cpp">
@@ -54,6 +57,9 @@
       <Filter>Fichiers sources</Filter>
     </ClCompile>
     <ClCompile Include="src\Datas\Callbacks.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Log\Logging.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
   </ItemGroup>
