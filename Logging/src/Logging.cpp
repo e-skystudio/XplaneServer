@@ -1,4 +1,4 @@
-#include "Logging.hpp"
+#include "../include/Logging.hpp"
 
 Logging::Logging()
 {

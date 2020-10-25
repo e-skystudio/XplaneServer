@@ -5,14 +5,14 @@
 #include <XPLMDataAccess.h>
 #include <XPLMUtilities.h>
 
-#include "../Log/Logging.hpp"
+#include <Logging.hpp>
 
 
 class Dataref
 {
 public:
 	static bool ParseJSON(std::string input, Json::Value& json);
-
+	static Logging log;
 public:
 	Dataref();
 	Dataref(std::string link, XPLMDataTypeID dataType);
@@ -29,7 +29,7 @@ private:
 	std::string _link;
 	XPLMDataTypeID _dataType;
 	XPLMDataRef _dataref;
-	Logging _log;
 private:
 	void XPLANELogException(const char* previousMessage, const std::exception& e);
 };
+

@@ -1,4 +1,4 @@
-#include "TCPServer.hpp"
+#include "../include/TCPServer.hpp"
 
 TCPServer::TCPServer() : _port(0), _ip("")
 {
@@ -139,31 +139,27 @@ int TCPServer::connectedClients()
 void TCPServer::bindCallback(std::string input, ServerCallbacks callback)
 {
 	_callbacks.emplace(input, callback);
+	_log.addToFile("callback" + input + ": [BINDED]");
 }
 
 int TCPServer::parseReceivedData(Client &cli, std::string data)
 {
-	Json::CharReaderBuilder builder;
-	Json::CharReader* reader = builder.newCharReader();
-
-	Json::Value root;
-	std::string errors;
-
-	bool parsingSuccessful = reader->parse(data.c_str(), data.c_str() + data.size(), &root, &errors);
-	if (!parsingSuccessful)
+	std::vector<std::string> commands = splitCommand(data);
+	for (auto& string : commands)
 	{
-		_log.addToFile("Error parsing the string");
+		_log.addToFile("Loaded : " + string);
+		std::string operation = getOpsFromJson(string);
+		auto it = _callbacks.find(operation);
+		if (it == _callbacks.end())
+		{
+			_log.addToFile("Last command didn't match any callbacks");
+			continue;
+		}
+		_log.addToFile("Executing callback" + operation + ": [STARTED]");
+		it->second(string, cli);
+		_log.addToFile("Executing callback " + operation + ": [DONE]");
 	}
-	const Json::Value operation = root["Ops"];
-
-	auto it = _callbacks.find(operation.asString());
-	if (it != _callbacks.end())
-	{
-		return it->second(data, cli);
-	}
-	_log.addToFile("Last command didn't match any callbacks");
 	return -1;
-
 }
 
 std::string TCPServer::getOpsFromJson(std::string input)
@@ -176,5 +172,30 @@ std::string TCPServer::getOpsFromJson(std::string input)
 	{
 		return "";
 	}
+	_log.addToFile("Parsing " + input + " Result : " + sm[1].str());
 	return sm[1].str();
+}
+
+std::vector<std::string> TCPServer::splitCommand(std::string input)
+{
+	std::string split_char = "}{";
+	std::vector<std::string> datas = std::vector<std::string>();
+	std::size_t split(0);
+	while (split != std::string::npos)
+	{
+		split = input.find(split_char);
+		if (split == std::string::npos)
+		{
+			continue;
+		}
+		datas.push_back(input.substr(0, split + 1));
+		input = input.substr(split + 1);
+	}
+	datas.push_back(input);
+	_log.addToFile("Split Command was called and returned :");
+	for (auto& str : datas)
+	{
+		_log.addToFile("\t\t" + str);
+	}
+	return datas;
 }

@@ -1,5 +1,6 @@
 #include "Dataref.hpp"
 
+Logging Dataref::log = Logging("DATAREFS_MANAGER");
 
 bool Dataref::ParseJSON(std::string input, Json::Value& json)
 {
@@ -12,17 +13,17 @@ bool Dataref::ParseJSON(std::string input, Json::Value& json)
 
 Dataref::Dataref() : _isValid(false), _isReadOnly(true), _link(""), _dataType(xplmType_Unknown), _dataref(NULL)
 {
-	_log = Logging("Dataref_Manager");
 }
 
 Dataref::Dataref(std::string link, XPLMDataTypeID dataType) : _link(link), _dataType(dataType), _dataref(NULL)
 {
-	_log = Logging("Dataref_Manager");
+	Dataref::log.addToFile("[NEW DATAREF] " + link);
 	if (_dataType == xplmType_Unknown || link.compare("") == 0)
 	{
 		_isValid = false;
 		_isReadOnly = true;
 		_dataType = xplmType_Unknown;
+		Dataref::log.addToFile("[NEW DATAREF] Wasn't created : Type or Link is empty");
 		return;
 	}
 	_dataref = XPLMFindDataRef(_link.c_str());
@@ -31,10 +32,12 @@ Dataref::Dataref(std::string link, XPLMDataTypeID dataType) : _link(link), _data
 		_isValid = false;
 		_isReadOnly = true;
 		_dataType = xplmType_Unknown;
+		Dataref::log.addToFile("[NEW DATAREF] Wasn't created : Unable to find it");
 		return;
 	}
 	_isValid = true;
 	_isReadOnly = (bool)XPLMCanWriteDataRef(_dataref);
+	Dataref::log.addToFile("[NEW DATAREF] Creation Sucessfull !");
 }
 
 Dataref::Dataref(const Dataref& b)
@@ -52,18 +55,26 @@ Dataref::~Dataref()
 
 std::string Dataref::GetValue()
 {
+	Dataref::log.addToFile("[GET VALUE] of " + _link + " [STARTED]");
 	if (_dataref == NULL || _isValid == false || _dataType == xplmType_Unknown)
 	{
 		return "";
 	}
+	std::string val("");
 	switch (_dataType)
 	{
 	case xplmType_Int:
-		return std::to_string(XPLMGetDatai(_dataref));
+		val = std::to_string(XPLMGetDatai(_dataref));
+		Dataref::log.addToFile("[GET VALUE] Type: INT;Value: "+ val);
+		return val;
 	case xplmType_Float:
-		return std::to_string(XPLMGetDataf(_dataref));
+		val = std::to_string(XPLMGetDataf(_dataref));
+		Dataref::log.addToFile("[GET VALUE] Type: FLOAT;Value: " + val);
+		return val;
 	case xplmType_Double:
-		return std::to_string(XPLMGetDatad(_dataref));
+		val = std::to_string(XPLMGetDatad(_dataref));
+		Dataref::log.addToFile("[GET VALUE] Type: DOUBLE;Value: " + val);
+		return val;
 	case xplmType_IntArray:
 	{
 		int arraySize = XPLMGetDatavi(_dataref, NULL, 0, 0);

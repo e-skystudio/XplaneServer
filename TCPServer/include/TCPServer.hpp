@@ -1,10 +1,7 @@
 #pragma once
 
 #include <string>
-#include <fstream>
 #include <iostream>
-#include <chrono>
-#include <ctime>
 #include <vector>
 #include <map>
 #include <regex>
@@ -13,7 +10,7 @@
 #include <Ws2tcpip.h>
 
 #include "Client.hpp"
-#include "../Log/Logging.hpp"
+#include <Logging.hpp>
 #include <json/json.h>
 
 #pragma comment(lib, "Ws2_32.lib")
@@ -48,6 +45,6 @@ protected:
 	std::map<std::string, ServerCallbacks> _callbacks;
 	int parseReceivedData(Client& cli, std::string data);
 	std::string getOpsFromJson(std::string input);
-
+	std::vector<std::string> splitCommand(std::string input);
 };
 

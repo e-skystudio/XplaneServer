@@ -1,36 +1,49 @@
 #include "Callbacks.hpp"
 
+using json = nlohmann::json;
+
+Logging logger = Logging("CALLBACK");
 std::map<std::string, Dataref*> DatarefMap = std::map<std::string, Dataref*>();
 
 int RegisterDataref_Callback(std::string dataIn, Client& emiter)
 {
-    Json::CharReaderBuilder builder;
-    Json::CharReader* reader = builder.newCharReader();
-    Json::Value json;
-    std::string errors;
+    json j = json::parse(dataIn);
+    std::string typeStr("");
+    std::string name("");
+    std::string link("");
+    XPLMDataTypeID type = xplmType_Int;
 
-    reader->parse(dataIn.c_str(), dataIn.c_str() + dataIn.size(), &json, &errors);
-
-    XPLMDataTypeID type = xplmType_Int; //DEFAULT
-
-    if (json["Type"].asString() == "int")
+    if (j.contains("Type"))
     {
-        type = xplmType_Int;
+        typeStr = j["Type"];
+        if (typeStr == "int")
+        {
+            type = xplmType_Int;
+        }
+        else if (typeStr == "float")
+        {
+            type = xplmType_Float;
+        }
+        else if (typeStr == "double")
+        {
+            type = xplmType_Double;
+        }
     }
-    else if (json["Type"].asString() == "float")
+    if (j.contains("Name"))
     {
-        type = xplmType_Float;
+        name = j["Name"];
     }
-    else if (json["Type"].asString() == "double")
+    if (j.contains("Link"))
     {
-        type = xplmType_Double;
+        link = j["Link"];
     }
-
-    Dataref* d = new Dataref(json["Link"].asString(), type);
-    DatarefMap.emplace(json["Name"].asString(), d);
-
-    emiter.sendTCPData("SUCESS"); //DEBUG to be change by json;
-
+    std::string output = "Type : " + typeStr + " Name : " + name + " Link : " + link + "\n";
+    logger.addToFile("Type : " + typeStr);
+    logger.addToFile("Name : " + name);
+    logger.addToFile("Link : " + link);
+    Dataref* d = new Dataref(link, type);
+    DatarefMap.emplace(name, d);
+    emiter.sendTCPData(output);
     return 0;
 }
 

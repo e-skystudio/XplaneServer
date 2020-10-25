@@ -1,4 +1,4 @@
-#include "Networking/TCPServer.hpp"
+#include <TCPServer.hpp>
 
 #include "./Datas/Callbacks.hpp"
 #include "./Datas/Dataref.hpp"
@@ -9,7 +9,7 @@
 #include <map>
 
 TCPServer server;
-
+float InitCallback(float inElapsedSinceLastCall, float inElapsedTimeSinceLastFlightLoop, int inCounter, void* inRefcon);
 float MainCallBack(float inElapsedSinceLastCall, float inElapsedTimeSinceLastFlightLoop, int inCounter, void* inRefcon);
 extern std::map<std::string, Dataref*> DatarefMap;
 
@@ -18,19 +18,9 @@ PLUGIN_API int XPluginStart(char* outName, char* outSig, char* outDesc)
 	strcpy(outName, "eSkyAirways-Simulator Connector");
 	strcpy(outSig, "eskystudio.eskyAirways.simulator_connector");
 	strcpy(outDesc, "Link X-Plane to eSkyAirways");
-	server = TCPServer(5505);
-	if (!server.initServer())
-	{
-		XPLMSpeakString("UNABLE TO START THE SERVER");
-	}
-	server.bindCallback("REGISTER_DATAREF", RegisterDataref_Callback);
-
-	//DatarefMap.emplace("Latitude", new Dataref("sim/flightmodel/position/latitude", xplmType_Float));
-	//DatarefMap.emplace("Longitude", new Dataref("sim/flightmodel/position/longitude", xplmType_Float));
-	//DatarefMap.emplace("Elevation", new Dataref("sim/flightmodel/position/elevation", xplmType_Float));
-	XPLMRegisterFlightLoopCallback(MainCallBack, -1.0f  /*wait for the first frame*/, NULL);
-
-
+	
+	
+	XPLMRegisterFlightLoopCallback(InitCallback, -1.0f  /*wait for the first frame*/, NULL);
 	return 1;
 }
 
@@ -49,6 +39,20 @@ PLUGIN_API int XPluginEnable(void)
 
 PLUGIN_API void XPluginReceiveMessage(XPLMPluginID inFromWho, int inMessage, void* inParam)
 {
+}
+
+float InitCallback(float inElapsedSinceLastCall, float inElapsedTimeSinceLastFlightLoop, int inCounter, void* inRefcon)
+{
+	server = TCPServer(5505);
+	server.bindCallback("REGISTER_DATAREF", RegisterDataref_Callback);
+	if (!server.initServer())
+	{
+		XPLMSpeakString("UNABLE TO START THE SERVER");
+	}
+	else {
+		XPLMRegisterFlightLoopCallback(MainCallBack, -1.0f  /*wait for the first frame*/, NULL);
+	}
+	return 0.0f;
 }
 
 float MainCallBack(float inElapsedSinceLastCall, float inElapsedTimeSinceLastFlightLoop, int inCounter, void* inRefcon)
