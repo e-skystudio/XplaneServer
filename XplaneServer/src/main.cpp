@@ -6,7 +6,11 @@
 #include <XPLMProcessing.h>
 #include <XPLMDataAccess.h>
 #include <XPLMUtilities.h>
+#include <nlohmann/json.hpp>
+
 #include <map>
+
+using json = nlohmann::json;
 
 TCPServer server;
 float InitCallback(float inElapsedSinceLastCall, float inElapsedTimeSinceLastFlightLoop, int inCounter, void* inRefcon);
@@ -61,12 +65,19 @@ float MainCallBack(float inElapsedSinceLastCall, float inElapsedTimeSinceLastFli
 	server.receiveData();
 	if (server.connectedClients() > 0)
 	{
+		json j;
 		std::string data = "";
 		for (auto& kv : DatarefMap)
 		{
-			data += kv.first + " : " + kv.second->GetValue() + "\n";
+			json dataref;
+			dataref["Name"] = kv.first;
+			dataref["Type"] = kv.second->GetDataType();
+			dataref["Value"] = kv.second->GetValue();
+
+			//data += kv.first + " : " + kv.second->GetValue() + "\n";
+			j.push_back(dataref);
 		}
-		server.broadcastData(data);
+		server.broadcastData(j.dump());
 	}
 	return 0.5f;
 }

@@ -1,7 +1,6 @@
 #pragma once
 #include <string>
 #include <map>
-#include <json/json.h>
 #include <XPLMDataAccess.h>
 #include <XPLMUtilities.h>
 
@@ -11,7 +10,6 @@
 class Dataref
 {
 public:
-	static bool ParseJSON(std::string input, Json::Value& json);
 	static Logging log;
 public:
 	Dataref();
@@ -20,6 +18,7 @@ public:
 	~Dataref();
 
 	std::string GetValue();
+	std::string GetDataType();
 	bool SetValue(std::string value, bool forceReadOnly = false);
 	bool IsReadOnly(bool ForceRecheck = false);
 

@@ -2,15 +2,6 @@
 
 Logging Dataref::log = Logging("DATAREFS_MANAGER");
 
-bool Dataref::ParseJSON(std::string input, Json::Value& json)
-{
-	Json::CharReaderBuilder builder;
-	Json::CharReader* reader = builder.newCharReader();
-	std::string errors;
-
-	return reader->parse(input.c_str(), input.c_str() + input.size(), &json, &errors);
-}
-
 Dataref::Dataref() : _isValid(false), _isReadOnly(true), _link(""), _dataType(xplmType_Unknown), _dataref(NULL)
 {
 }
@@ -121,6 +112,28 @@ std::string Dataref::GetValue()
 	return "";
 }
 
+std::string Dataref::GetDataType()
+{
+	std::string type("");
+	switch (_dataType)
+	{
+	case xplmType_Int:
+		return "Int";
+	case xplmType_Float:
+		return "Float";
+	case xplmType_Double:
+		return "Double";
+	case xplmType_IntArray:
+		return "IntArray";
+	case xplmType_FloatArray:
+		return "FloatArray";
+	case xplmType_Data:
+		return "Data";
+	default:
+		return "";
+	}
+}
+
 bool Dataref::SetValue(std::string value, bool forceReadOnly)
 {
 	if (!_isValid || _dataref == NULL || _dataType == xplmType_Unknown)
@@ -191,7 +204,7 @@ bool Dataref::SetValue(std::string value, bool forceReadOnly)
 	}
 	case xplmType_IntArray:
 	{
-		int arraySize = XPLMGetDatavi(_dataref, NULL, 0, 0);
+		/*int arraySize = XPLMGetDatavi(_dataref, NULL, 0, 0);
 		Json::Value jParser;
 		ParseJSON(value, jParser);
 		Json::ValueType val = jParser.type();
@@ -201,12 +214,12 @@ bool Dataref::SetValue(std::string value, bool forceReadOnly)
 		{
 			*(values + (i * sizeof(int))) = jParser[i].asInt();
 		}
-		XPLMSetDatavi(_dataref, values, 0, maxSize);
+		XPLMSetDatavi(_dataref, values, 0, maxSize);*/
 		return true;
 	}
 	case xplmType_FloatArray:
 	{
-		int arraySize = XPLMGetDatavi(_dataref, NULL, 0, 0);
+		/*int arraySize = XPLMGetDatavi(_dataref, NULL, 0, 0);
 		Json::Value jParser;
 		ParseJSON(value, jParser);
 		Json::ValueType val = jParser.type();
@@ -216,7 +229,7 @@ bool Dataref::SetValue(std::string value, bool forceReadOnly)
 		{
 			*(values + (i * sizeof(float))) = jParser[i].asFloat();
 		}
-		XPLMSetDatavf(_dataref, values, 0, maxSize);
+		XPLMSetDatavf(_dataref, values, 0, maxSize);*/
 		return true;
 	}
 	case xplmType_Data:

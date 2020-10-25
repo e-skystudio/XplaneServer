@@ -11,7 +11,6 @@
 
 #include "Client.hpp"
 #include <Logging.hpp>
-#include <json/json.h>
 
 #pragma comment(lib, "Ws2_32.lib")
 
