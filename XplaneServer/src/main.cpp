@@ -28,7 +28,7 @@ PLUGIN_API int XPluginStart(char* outName, char* outSig, char* outDesc)
 	//DatarefMap.emplace("Latitude", new Dataref("sim/flightmodel/position/latitude", xplmType_Float));
 	//DatarefMap.emplace("Longitude", new Dataref("sim/flightmodel/position/longitude", xplmType_Float));
 	//DatarefMap.emplace("Elevation", new Dataref("sim/flightmodel/position/elevation", xplmType_Float));
-	XPLMRegisterFlightLoopCallback(MainCallBack, 0.5f, NULL);
+	XPLMRegisterFlightLoopCallback(MainCallBack, -1.0f  /*wait for the first frame*/, NULL);
 
 
 	return 1;

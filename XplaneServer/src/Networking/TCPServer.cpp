@@ -23,30 +23,30 @@ bool TCPServer::initServer()
 	int res = WSAStartup(MAKEWORD(2, 2), &_wsaData);
 	if (res != NO_ERROR)
 	{
-		_log.AddToFile("UDPConnection WSA Startup Failed with error : " + std::to_string(res));
+		_log.addToFile("UDPConnection WSA Startup Failed with error : " + std::to_string(res));
 		return _isValid;
 	}
 #ifdef _DEBUG
-	_log.AddToFile("WSA Startup Sucessfull !");
+	_log.addToFile("WSA Startup Sucessfull !");
 #endif // _DEBUG
 	_serverSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (_serverSocket == INVALID_SOCKET) {
-		_log.AddToFile("socket creation failed with error" + std::to_string(WSAGetLastError()));
-		return _isValid;
+		_log.addToFile("socket creation failed with error" + std::to_string(WSAGetLastError()));
+		return _isValid;	
 	}
 #ifdef _DEBUG
-	_log.AddToFile("socket creation Sucessfull !");
+	_log.addToFile("socket creation Sucessfull !");
 #endif // _DEBUG
 	_serverAddr.sin_family = AF_INET;
 	_serverAddr.sin_port = htons(_port);
 	inet_pton(AF_INET, _ip.c_str(), &_serverAddr.sin_addr.s_addr);
 
 	if (bind(_serverSocket, (SOCKADDR*)&_serverAddr, sizeof(_serverAddr))) {
-		_log.AddToFile("bind failed with error: " + std::to_string(WSAGetLastError()));
+		_log.addToFile("bind failed with error: " + std::to_string(WSAGetLastError()));
 		return _isValid;
 	}
 #ifdef _DEBUG
-	_log.AddToFile("bind on port is Sucessfull !");
+	_log.addToFile("bind on port is Sucessfull !");
 #endif // _DEBUG
 	if (listen(_serverSocket, SOMAXCONN) == SOCKET_ERROR) {
 		printf("Listen failed with error: %ld\n", WSAGetLastError());
@@ -59,13 +59,13 @@ bool TCPServer::initServer()
 
 	if (ioctlsocket(_serverSocket, FIONBIO, &NonBlock) == SOCKET_ERROR)
 	{
-		_log.AddToFile("ioctlsocket() failed with error" +  WSAGetLastError());
+		_log.addToFile("ioctlsocket() failed with error" +  WSAGetLastError());
 		return 1;
 	}
 	else
-		_log.AddToFile("ioctlsocket() is OK!");
+		_log.addToFile("ioctlsocket() is OK!");
 
-	_log.AddToFile("TCP Connection initalization sucessful on " + std::to_string(_port));
+	_log.addToFile("TCP Connection initalization sucessful on " + std::to_string(_port));
 	_isValid = true;
 	return _isValid;
 }
@@ -78,7 +78,7 @@ void TCPServer::receiveData()
 		if (it->receiveTCPData() > 0)
 		{
 			std::string data = it->getAndEmptyBuffer();
-			_log.AddToFile(data);
+			_log.addToFile(data);
 			parseReceivedData(*it, data);
 		}
 		it += 1;
@@ -116,10 +116,10 @@ int TCPServer::listenForClient()
 	int res = send(client, data.c_str(), data.length(), 0);
 	if (res == SOCKET_ERROR)
 	{
-		_log.AddToFile("Error in listenForClient : " + std::to_string(WSAGetLastError()));
+		_log.addToFile("Error in listenForClient : " + std::to_string(WSAGetLastError()));
 	}
 	else {
-		_log.AddToFile("listenForClient sended : " + std::to_string(res) + " byte(s)");
+		_log.addToFile("listenForClient sended : " + std::to_string(res) + " byte(s)");
 	}
 
 	ULONG NonBlock = 1;
@@ -152,7 +152,7 @@ int TCPServer::parseReceivedData(Client &cli, std::string data)
 	bool parsingSuccessful = reader->parse(data.c_str(), data.c_str() + data.size(), &root, &errors);
 	if (!parsingSuccessful)
 	{
-		_log.AddToFile("Error parsing the string");
+		_log.addToFile("Error parsing the string");
 	}
 	const Json::Value operation = root["Ops"];
 
@@ -161,7 +161,20 @@ int TCPServer::parseReceivedData(Client &cli, std::string data)
 	{
 		return it->second(data, cli);
 	}
-	_log.AddToFile("Last command didn't match any callbacks");
+	_log.addToFile("Last command didn't match any callbacks");
 	return -1;
 
+}
+
+std::string TCPServer::getOpsFromJson(std::string input)
+{
+	std::regex regexPattern("[\\\'\\\"]Ops[\\\'\\\"]\\ ?:\\ ?[\\\'\\\"](\\b\\w+\\b)[\\\'\\\"]");
+	std::smatch sm;
+
+	bool res = regex_search(input, sm, regexPattern);
+	if (!res)
+	{
+		return "";
+	}
+	return sm[1].str();
 }

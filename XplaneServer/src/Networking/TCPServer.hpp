@@ -7,6 +7,7 @@
 #include <ctime>
 #include <vector>
 #include <map>
+#include <regex>
 
 #include <WinSock2.h>
 #include <Ws2tcpip.h>
@@ -46,6 +47,7 @@ protected:
 	FD_SET _ExceptSet;
 	std::map<std::string, ServerCallbacks> _callbacks;
 	int parseReceivedData(Client& cli, std::string data);
+	std::string getOpsFromJson(std::string input);
 
 };
 
