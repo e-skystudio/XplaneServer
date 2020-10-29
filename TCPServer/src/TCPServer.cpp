@@ -97,7 +97,7 @@ int TCPServer::broadcastData(std::string data)
 		}
 		it++;
 	}
-	return data.length();
+	return (int)data.length();
 }
 
 
@@ -112,8 +112,9 @@ int TCPServer::listenForClient()
 		return 0;
 	}
 
-	std::string data = "Hello on the server\n";
-	int res = send(client, data.c_str(), data.length(), 0);
+	std::string data = "{\"Server Version\": \""+ std::to_string(PROTO_MAJ) + '_' + std::to_string(PROTO_MAJ) + "\"";
+	data += "\"Connexion Status\":\"Accepted\"}";
+	int res = send(client, data.c_str(), (int)data.length(), 0);
 	if (res == SOCKET_ERROR)
 	{
 		_log.addToFile("Error in listenForClient : " + std::to_string(WSAGetLastError()));
@@ -128,18 +129,22 @@ int TCPServer::listenForClient()
 		return -2;
 	}
 	_clients.push_back(Client(client));
-	return _clients.size();
+	return (int)_clients.size();
 }
 
 int TCPServer::connectedClients()
 {
-	return _clients.size();
+	return (int)_clients.size();
 }
 
 void TCPServer::bindCallback(std::string input, ServerCallbacks callback)
 {
 	_callbacks.emplace(input, callback);
-	_log.addToFile("callback" + input + ": [BINDED]");
+	_log.addToFile("callback" + input + ":");
+	for (auto& kv : _callbacks)
+	{
+		_log.addToFile("\t " + kv.first + " : [BINDED]");
+	}
 }
 
 int TCPServer::parseReceivedData(Client &cli, std::string data)
@@ -156,8 +161,8 @@ int TCPServer::parseReceivedData(Client &cli, std::string data)
 			continue;
 		}
 		_log.addToFile("Executing callback" + operation + ": [STARTED]");
-		it->second(string, cli);
-		_log.addToFile("Executing callback " + operation + ": [DONE]");
+		int res = it->second(string, cli);
+		_log.addToFile("Executing callback " + operation + ": [DONE] (Returned = " + std::to_string(res) + ")");
 	}
 	return -1;
 }
@@ -172,7 +177,6 @@ std::string TCPServer::getOpsFromJson(std::string input)
 	{
 		return "";
 	}
-	_log.addToFile("Parsing " + input + " Result : " + sm[1].str());
 	return sm[1].str();
 }
 
@@ -192,10 +196,5 @@ std::vector<std::string> TCPServer::splitCommand(std::string input)
 		input = input.substr(split + 1);
 	}
 	datas.push_back(input);
-	_log.addToFile("Split Command was called and returned :");
-	for (auto& str : datas)
-	{
-		_log.addToFile("\t\t" + str);
-	}
 	return datas;
 }

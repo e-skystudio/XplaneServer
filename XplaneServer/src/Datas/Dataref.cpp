@@ -1,12 +1,36 @@
 #include "Dataref.hpp"
 
+using json = nlohmann::json;
+
 Logging Dataref::log = Logging("DATAREFS_MANAGER");
 
-Dataref::Dataref() : _isValid(false), _isReadOnly(true), _link(""), _dataType(xplmType_Unknown), _dataref(NULL)
+const char* ws = " \t\n\r\f\v\'\"";
+
+inline std::string& rtrim(std::string& s, const char* t = ws)
+{
+	s.erase(s.find_last_not_of(t) + 1);
+	return s;
+}
+
+// trim from beginning of string (left)
+inline std::string& ltrim(std::string& s, const char* t = ws)
+{
+	s.erase(0, s.find_first_not_of(t));
+	return s;
+}
+
+// trim from both ends of string (right then left)
+inline std::string& trim(std::string& s, const char* t = ws)
+{
+	return ltrim(rtrim(s, t), t);
+}
+
+
+Dataref::Dataref() : _isValid(false), _isReadOnly(true), _link(""), _dataType(xplmType_Unknown), _dataref(NULL), _index(-1)
 {
 }
 
-Dataref::Dataref(std::string link, XPLMDataTypeID dataType) : _link(link), _dataType(dataType), _dataref(NULL)
+Dataref::Dataref(std::string link, XPLMDataTypeID dataType, int index) : _link(link), _dataType(dataType), _dataref(NULL), _index(index)
 {
 	Dataref::log.addToFile("[NEW DATAREF] " + link);
 	if (_dataType == xplmType_Unknown || link.compare("") == 0)
@@ -29,6 +53,7 @@ Dataref::Dataref(std::string link, XPLMDataTypeID dataType) : _link(link), _data
 	_isValid = true;
 	_isReadOnly = (bool)XPLMCanWriteDataRef(_dataref);
 	Dataref::log.addToFile("[NEW DATAREF] Creation Sucessfull !");
+	Dataref::log.addToFile("[NEW DATAREF] IsReadOnly = " + std::to_string(_isReadOnly));
 }
 
 Dataref::Dataref(const Dataref& b)
@@ -42,74 +67,6 @@ Dataref::Dataref(const Dataref& b)
 
 Dataref::~Dataref()
 {
-}
-
-std::string Dataref::GetValue()
-{
-	Dataref::log.addToFile("[GET VALUE] of " + _link + " [STARTED]");
-	if (_dataref == NULL || _isValid == false || _dataType == xplmType_Unknown)
-	{
-		return "";
-	}
-	std::string val("");
-	switch (_dataType)
-	{
-	case xplmType_Int:
-		val = std::to_string(XPLMGetDatai(_dataref));
-		Dataref::log.addToFile("[GET VALUE] Type: INT;Value: "+ val);
-		return val;
-	case xplmType_Float:
-		val = std::to_string(XPLMGetDataf(_dataref));
-		Dataref::log.addToFile("[GET VALUE] Type: FLOAT;Value: " + val);
-		return val;
-	case xplmType_Double:
-		val = std::to_string(XPLMGetDatad(_dataref));
-		Dataref::log.addToFile("[GET VALUE] Type: DOUBLE;Value: " + val);
-		return val;
-	case xplmType_IntArray:
-	{
-		int arraySize = XPLMGetDatavi(_dataref, NULL, 0, 0);
-		int* arrayVal = new int[arraySize];
-		XPLMGetDatavi(_dataref, arrayVal, 0, arraySize);
-		std::string output = "[";
-		for (int i(0); i < arraySize - 1; i++)
-		{
-			output += std::to_string(*(arrayVal + (i * sizeof(int)))) + ",";
-		}
-		output += std::to_string(*(arrayVal + (arraySize * sizeof(int)))) + "]";
-		return output;
-	}
-	case xplmType_FloatArray:
-	{
-		int arraySize = XPLMGetDatavf(_dataref, NULL, 0, 0);
-		float* arrayVal = new float[arraySize];
-		XPLMGetDatavf(_dataref, arrayVal, 0, arraySize);
-		std::string output = "[";
-		for (int i(0); i < arraySize - 1; i++)
-		{
-			output += std::to_string(*(arrayVal + (i * sizeof(int)))) + ",";
-		}
-		output += std::to_string(*(arrayVal + (arraySize * sizeof(int)))) + "]";
-		return output;
-	}
-	case xplmType_Data:
-	{
-		/*int arraySize = XPLMGetDatab(_dataref, NULL, 0, 0);
-		float* arrayVal = new float[arraySize];
-		XPLMGetDatavb(_dataref, arrayVal, 0, arraySize);
-		std::string output = "[";
-		for (int i(0); i < arraySize - 1; i++)
-		{
-			output += std::to_string(*(arrayVal + (i * sizeof(int)))) + ",";
-		}
-		output += std::to_string(*(arrayVal + (arraySize * sizeof(int)))) + "]";
-		return output;*/
-		return "";
-	}
-	default:
-		break;
-	}
-	return "";
 }
 
 std::string Dataref::GetDataType()
@@ -134,25 +91,111 @@ std::string Dataref::GetDataType()
 	}
 }
 
+std::string Dataref::GetValue()
+{
+	if (_dataref == NULL || _isValid == false || _dataType == xplmType_Unknown)
+	{
+		return "";
+	}
+	std::string val("");
+	switch (_dataType)
+	{
+	case xplmType_Int:
+		val = std::to_string(XPLMGetDatai(_dataref));
+		return val;
+	case xplmType_Float:
+		val = std::to_string(XPLMGetDataf(_dataref));
+		return val;
+	case xplmType_Double:
+		val = std::to_string(XPLMGetDatad(_dataref));
+		return val;
+	case xplmType_IntArray:
+	{
+		int arraySize = XPLMGetDatavi(_dataref, NULL, 0, 0);
+		int* arrayVal = new int[arraySize];
+		if (_index >= 0)
+		{
+			XPLMGetDatavi(_dataref, arrayVal, _index, 1);
+			int value = arrayVal[0];
+			return std::to_string(value);
+		}
+		XPLMGetDatavi(_dataref, arrayVal, 0, arraySize);
+		json j = json::array();
+		for (int i(0); i < arraySize; i++)
+		{
+			j.push_back(std::to_string(*(arrayVal + i)));
+		}
+		return j.dump();
+	}
+	case xplmType_FloatArray:
+	{
+		int arraySize = XPLMGetDatavf(_dataref, NULL, 0, 0);
+		float* arrayVal = new float[arraySize];
+		if (_index >= 0)
+		{
+			XPLMGetDatavf(_dataref, arrayVal, _index, 1);
+			float value = arrayVal[0];
+			return std::to_string(value);
+		}
+		XPLMGetDatavf(_dataref, arrayVal, 0, arraySize);
+		json j = json::array();
+		for (int i(0); i < arraySize; i++)
+		{
+			j.push_back(std::to_string(*(arrayVal + i)));
+		}
+		return j.dump();
+	}
+	case xplmType_Data:
+	{
+		int arraySize = XPLMGetDatab(_dataref, NULL, 0, 0);
+		char* arrayVal = new char[arraySize];
+		XPLMGetDatab(_dataref, arrayVal, 0, arraySize);
+		return arrayVal;
+	}
+	default:
+		break;
+	}
+	return "";
+}
+
 bool Dataref::SetValue(std::string value, bool forceReadOnly)
 {
+
+	Dataref::log.addToFile("[SET VALUE] of " + _link + " [STARTED]");
 	if (!_isValid || _dataref == NULL || _dataType == xplmType_Unknown)
 	{
+		Dataref::log.addToFile("Dataref is not valid or link is null or type is not set");
+		if (!_isValid)
+		{
+			Dataref::log.addToFile("Dataref is not valid");
+		}
+		if (_dataref == NULL)
+		{
+			Dataref::log.addToFile("Dataref is null");
+		}
+		if (_dataType == xplmType_Unknown)
+		{
+			Dataref::log.addToFile("Dataref type is unset");
+		}
 		return false;
 	}
 	if (forceReadOnly)
 	{
+		Dataref::log.addToFile("[SET VALUE] Updating Read Only");
 		_isReadOnly = (bool)XPLMCanWriteDataRef(_dataref);
 	}
 	if (!_isReadOnly)
 	{
 		return false;
+		Dataref::log.addToFile("Dataref is readonly");
 	}
-
+	Dataref::log.addToFile("[SET VALUE] Switching Type");
 	switch (_dataType)
 	{
 	case xplmType_Int:
 	{
+		value = trim(value);
+		Dataref::log.addToFile("[SET VALUE] Integer");
 		int val = 0;
 		try
 		{
@@ -160,33 +203,45 @@ bool Dataref::SetValue(std::string value, bool forceReadOnly)
 		}
 		catch (const std::exception& e)
 		{
-#ifdef _DEBUG
-			XPLANELogException("Unable to parse value to integer", e);
-#endif // _DEBUG
 			return false;
 		}
 		XPLMSetDatai(_dataref, val);
+		Dataref::log.addToFile("Value = " + std::to_string(val));
 		return true;
 	}
 	case xplmType_Float:
 	{
+		value = trim(value);
+		Dataref::log.addToFile("[SET VALUE] Float");
 		float val = 0.0f;
+		Dataref::log.addToFile("Trying to parse |" + value + "|");
 		try
 		{
 			val = std::stof(value);
 		}
 		catch (const std::exception& e)
 		{
-#ifdef _DEBUG
-			XPLANELogException("Unable to parse value to float", e);
-#endif // _DEBUG
-			return false;
+			Dataref::log.addToFile("[SET VALUE]Exception During parsing (stof): " + std::string(e.what()));
+			Dataref::log.addToFile("[SET VALUE]Trying as int to convert to float");
+			try
+			{
+				val = (float)std::stoi(value);
+			}
+			catch (const std::exception& e1)
+			{
+				Dataref::log.addToFile("[SET VALUE]Exception During parsing (stoi): " + std::string(e1.what()));
+				return false;
+			}
 		}
 		XPLMSetDataf(_dataref, val);
+		Dataref::log.addToFile("Value = " + std::to_string(val));
 		return true;
 	}
 	case xplmType_Double:
 	{
+		char* valChr = (char*)value.c_str();
+		value = std::string(valChr);
+		Dataref::log.addToFile("[SET VALUE] Double");
 		double val = 0.0;
 		try
 		{
@@ -194,46 +249,69 @@ bool Dataref::SetValue(std::string value, bool forceReadOnly)
 		}
 		catch (const std::exception& e)
 		{
-#ifdef _DEBUG
-			XPLANELogException("Unable to parse value to double", e);
-#endif // _DEBUG
 			return false;
 		}
 		XPLMSetDatad(_dataref, val);
+		Dataref::log.addToFile("Value = " + std::to_string(val));
 		return true;
 	}
 	case xplmType_IntArray:
 	{
-		/*int arraySize = XPLMGetDatavi(_dataref, NULL, 0, 0);
-		Json::Value jParser;
-		ParseJSON(value, jParser);
-		Json::ValueType val = jParser.type();
-		int maxSize = ((unsigned int)arraySize > jParser.size()) ? jParser.size() : arraySize;
-		int* values = new int[maxSize];
-		for (int i(0); i < maxSize; i++)
+		Dataref::log.addToFile("[SET VALUE] Integer Array");
+		json j = json::parse(value);
+		if (_index < 0)
 		{
-			*(values + (i * sizeof(int))) = jParser[i].asInt();
+
+			int arraySize = XPLMGetDatavi(_dataref, NULL, 0, 0);
+			int* arrayVal = new int[arraySize];
+			int maxElem = arraySize;
+			if (j.size() < arraySize)
+			{
+				maxElem = j.size();
+			}
+
+			for (int i(0); i < maxElem; i++)
+			{
+				*(arrayVal + i) = std::stoi(j[i].get<std::string>());
+			}
+			XPLMSetDatavi(_dataref, arrayVal, 0, maxElem);
 		}
-		XPLMSetDatavi(_dataref, values, 0, maxSize);*/
+		else
+		{
+			int val = std::stoi(j.get<std::string>());
+			XPLMSetDatavi(_dataref, &val, _index, 1);
+		}
 		return true;
 	}
 	case xplmType_FloatArray:
 	{
-		/*int arraySize = XPLMGetDatavi(_dataref, NULL, 0, 0);
-		Json::Value jParser;
-		ParseJSON(value, jParser);
-		Json::ValueType val = jParser.type();
-		int maxSize = ((unsigned int)arraySize > jParser.size()) ? jParser.size() : arraySize;
-		float* values = new float[maxSize];
-		for (int i(0); i < maxSize; i++)
+		Dataref::log.addToFile("[SET VALUE] FloatArray");
+		json j = json::parse(value);
+		if (_index < 0)
 		{
-			*(values + (i * sizeof(float))) = jParser[i].asFloat();
+			int arraySize = XPLMGetDatavf(_dataref, NULL, 0, 0);
+			float* arrayVal = new float[arraySize];
+			int maxElem = arraySize;
+			if (j.size() < arraySize)
+			{
+				maxElem = j.size();
+			}
+
+			for (int i(0); i < maxElem; i++)
+			{
+				*(arrayVal + i) = std::stof(j[i].get<std::string>());
+			}
+			XPLMSetDatavf(_dataref, arrayVal, 0, maxElem);
 		}
-		XPLMSetDatavf(_dataref, values, 0, maxSize);*/
+		else {
+			float val = std::stof(j.get<std::string>());
+			XPLMSetDatavf(_dataref, &val, _index, 1);
+		}
 		return true;
 	}
 	case xplmType_Data:
 	{
+		Dataref::log.addToFile("[SET VALUE] Data");
 		return false;
 	}
 	default:

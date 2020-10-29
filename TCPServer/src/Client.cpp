@@ -11,6 +11,7 @@ int Client::sendTCPData(std::string data)
 {
 	ULONG NonBlock = 0;
 	ioctlsocket(sock, FIONBIO, &NonBlock);
+	data += '\f';
 	int res = send(sock, data.c_str(), data.length(), 0);
 	NonBlock = 1;
 	ioctlsocket(sock, FIONBIO, &NonBlock);

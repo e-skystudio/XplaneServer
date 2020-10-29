@@ -157,10 +157,12 @@
   <ItemGroup>
     <ClCompile Include="src\Client.cpp" />
     <ClCompile Include="src\TCPServer.cpp" />
+    <ClCompile Include="src\UDPEmiter.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Client.hpp" />
     <ClInclude Include="include\TCPServer.hpp" />
+    <ClInclude Include="include\UDPEmiter.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Logging\Logging.vcxproj">

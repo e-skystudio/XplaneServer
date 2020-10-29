@@ -21,12 +21,18 @@
     <ClCompile Include="src\TCPServer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\UDPEmiter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Client.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\TCPServer.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\UDPEmiter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
