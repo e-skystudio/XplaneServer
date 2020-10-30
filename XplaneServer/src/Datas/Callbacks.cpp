@@ -64,21 +64,22 @@ int SetDatarefValue_Callback(std::string dataIn, Client& emiter)
 {
     logger.addToFile("SET_DATAREF_VALUE Started");
     json j = json::parse(dataIn);
-    Dataref selDr;
+    Dataref* selDr;
     std::string name("");
     std::string value;
 
     if (j.contains("Value"))
     {
         value = j["Value"].dump();
-        logger.addToFile("Value = " + value);
+        logger.addToFile("0Value = " + value);
     }
 
     std::map<std::string, Dataref*>::iterator it;
     if (j.contains("Name") && (it = DatarefMap.find(j["Name"])) != DatarefMap.end())
     {
-        selDr = *(DatarefMap.at(j["Name"]));
-        logger.addToFile("Name = " + j["Name"]);
+        logger.addToFile("Name Founded");
+        selDr = it->second;
+        logger.addToFile("Dataref Copied");
     }
 
     else 
@@ -120,10 +121,10 @@ int SetDatarefValue_Callback(std::string dataIn, Client& emiter)
             index = j["Index"];
         }
         logger.addToFile("Index = " + std::to_string(index));
-        selDr = Dataref(link, type, index);
+        selDr = new Dataref(link, type, index);
     }
     logger.addToFile("Value = " + value);
-    selDr.SetValue(value);
+    selDr->SetValue(value);
     logger.addToFile("SET_DATAREF_VALUE Stopped");
     return 0;
 }
@@ -151,6 +152,19 @@ int SetActivePause_Callback(std::string dataIn, Client& emiter)
 
 int RepositionAircraft_Callback(std::string dataIn, Client& emiter)
 {
+    Dataref physics = Dataref("sim/operation/override/override_planepath", xplmType_Int);
+    physics.SetValue("1");
+
+    json j = json::parse(dataIn);
+    double lat = j["Latitude"];
+    double lon = j["Longitude"];
+    double ele = j["Elevation"];
+    double heading = j["Yaw"];
+    double spd = j["Speed"];
+
+    XPLMPlaceUserAtLocation(lat, lon, ele, heading, spd);
+    physics.SetValue("0");
+
     return 0;
 }
 
@@ -164,7 +178,7 @@ int GetAirport_Callback(std::string dataIn, Client& emiter)
         return 1;
     }
     float lat = j["Latitude"];
-    float lon = j["Latitude"];
+    float lon = j["Longitude"];
     logger.addToFile("Latitude :" + std::to_string(lat) + " Longitude :" + std::to_string(lon));
     XPLMNavRef airport = XPLMFindNavAid(NULL, NULL, &lat, &lon, NULL, xplm_Nav_Airport);
     char* arptId = new char[32];
@@ -172,9 +186,11 @@ int GetAirport_Callback(std::string dataIn, Client& emiter)
     char* reg = new char[256];
     float* height = new float;
 
+    logger.addToFile("Getting Navdata Info");
     XPLMGetNavAidInfo(airport, NULL, NULL, NULL, height, NULL, NULL, arptId, arptName, reg);
 
     json resp;
+    resp["Ops"] = "AirportRespons";
     resp["Id"] = std::string(arptId);
     resp["Name"] = std::string(arptName);
     resp["Registration"] = std::string(reg);

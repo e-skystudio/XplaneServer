@@ -162,6 +162,7 @@ bool Dataref::SetValue(std::string value, bool forceReadOnly)
 {
 
 	Dataref::log.addToFile("[SET VALUE] of " + _link + " [STARTED]");
+	Dataref::log.addToFile("[SET VALUE] Value = |" + value + "|");
 	if (!_isValid || _dataref == NULL || _dataType == xplmType_Unknown)
 	{
 		Dataref::log.addToFile("Dataref is not valid or link is null or type is not set");
@@ -239,8 +240,7 @@ bool Dataref::SetValue(std::string value, bool forceReadOnly)
 	}
 	case xplmType_Double:
 	{
-		char* valChr = (char*)value.c_str();
-		value = std::string(valChr);
+		value = trim(value);
 		Dataref::log.addToFile("[SET VALUE] Double");
 		double val = 0.0;
 		try
@@ -286,22 +286,40 @@ bool Dataref::SetValue(std::string value, bool forceReadOnly)
 	case xplmType_FloatArray:
 	{
 		Dataref::log.addToFile("[SET VALUE] FloatArray");
+		try 
+		{
+			value = trim(value);
+		}
+		catch (const std::exception& e1)
+		{
+			Dataref::log.addToFile("[SET VALUE]Exception During trim: " + std::string(e1.what()));
+			return false;
+		}
+
+		Dataref::log.addToFile("Parsing Value");
 		json j = json::parse(value);
+		Dataref::log.addToFile("Parsing Value[DONE]");
 		if (_index < 0)
 		{
+			Dataref::log.addToFile("No Index is set");
 			int arraySize = XPLMGetDatavf(_dataref, NULL, 0, 0);
+			Dataref::log.addToFile("arraySize = " + std::to_string(arraySize));
 			float* arrayVal = new float[arraySize];
 			int maxElem = arraySize;
 			if (j.size() < arraySize)
 			{
 				maxElem = j.size();
 			}
-
+			Dataref::log.addToFile("maxElem = " + std::to_string(maxElem));
 			for (int i(0); i < maxElem; i++)
 			{
-				*(arrayVal + i) = std::stof(j[i].get<std::string>());
+				float val = j[i].get<float>();
+				Dataref::log.addToFile("Copying [ " + std::to_string(i) + "] = |" + std::to_string(i)+ "|");
+				*(arrayVal + i) = val;
 			}
+			Dataref::log.addToFile("XPLMSetDatavf Called");
 			XPLMSetDatavf(_dataref, arrayVal, 0, maxElem);
+			Dataref::log.addToFile("XPLMSetDatavf Ended");
 		}
 		else {
 			float val = std::stof(j.get<std::string>());

@@ -7,6 +7,7 @@
 #include "Dataref.hpp"
 #include <Logging.hpp>
 #include <XPLMNavigation.h>
+#include <XPLMPlanes.h>
 
 extern Logging logger;
 extern std::map<std::string, Dataref*> DatarefMap;
