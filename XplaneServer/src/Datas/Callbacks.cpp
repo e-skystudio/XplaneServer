@@ -153,3 +153,34 @@ int RepositionAircraft_Callback(std::string dataIn, Client& emiter)
 {
     return 0;
 }
+
+int GetAirport_Callback(std::string dataIn, Client& emiter)
+{
+    logger.addToFile("GET AIRPORT CALLBACK STARTED!");
+    json j = json::parse(dataIn);
+    if (!j.contains("Latitude") || !j.contains("Longitude"))
+    {
+        logger.addToFile("MISSING LATITUDE AND/OR LONGITUDE");
+        return 1;
+    }
+    float lat = j["Latitude"];
+    float lon = j["Latitude"];
+    logger.addToFile("Latitude :" + std::to_string(lat) + " Longitude :" + std::to_string(lon));
+    XPLMNavRef airport = XPLMFindNavAid(NULL, NULL, &lat, &lon, NULL, xplm_Nav_Airport);
+    char* arptId = new char[32];
+    char* arptName = new char[256];
+    char* reg = new char[256];
+    float* height = new float;
+
+    XPLMGetNavAidInfo(airport, NULL, NULL, NULL, height, NULL, NULL, arptId, arptName, reg);
+
+    json resp;
+    resp["Id"] = std::string(arptId);
+    resp["Name"] = std::string(arptName);
+    resp["Registration"] = std::string(reg);
+    resp["Height"] = *height;
+
+    emiter.sendTCPData(resp.dump());
+    logger.addToFile("GET AIRPORT ENDED!");
+    return 0;
+}

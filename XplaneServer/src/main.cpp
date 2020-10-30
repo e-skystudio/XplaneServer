@@ -73,6 +73,7 @@ float InitCallback(float inElapsedSinceLastCall, float inElapsedTimeSinceLastFli
 	server = TCPServer(5505);
 	server.bindCallback("REGISTER_DATAREF", RegisterDataref_Callback);
 	server.bindCallback("SET_DATAREF", SetDatarefValue_Callback);
+	server.bindCallback("GET_AIRPORT", GetAirport_Callback);
 	if (!server.initServer())
 	{
 		XPLMSpeakString("UNABLE TO START THE SERVER");
